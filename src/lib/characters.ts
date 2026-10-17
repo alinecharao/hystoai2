@@ -24,10 +24,17 @@ export function parseCommand(text: string) {
   return SCENE_COMMANDS.find((c) => c.id === m[1]) ?? null;
 }
 
+// Model-facing structure tags must never be shown as narrative text.
+export function stripNarrativeControlTags(value: string): string {
+  return value
+    .replace(/<\/?(?:USER_TEXT|DIALOGUE|MENTAL_SPEECH|MEMORY_OR_DREAM|CHARACTER_CANON|CURRENT_STORY|STORY_BACKGROUND|STYLE_EXAMPLES|USER_PERSONA|STORY_MEMORY)(?:\s+[^<>]*?)?\s*\/?>/gi, "")
+    .replace(/<\/?(?:thought|thinking)\s*>/gi, (tag) => tag.toLowerCase().startsWith("</") ? "</thought>" : "<thought>");
+}
+
 export type NarrativeSegment = { type: "body" | "thought"; text: string };
 
 export function parseNarrativeSegments(text: string): NarrativeSegment[] {
-  const normalized = text.replace(
+  const normalized = stripNarrativeControlTags(text).replace(
     /\[pensamento\]([\s\S]*?)(?:\[\/pensamento\]|$)/gi,
     "<thought>$1</thought>",
   );
