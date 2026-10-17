@@ -1,14 +1,14 @@
-# Hystoai
+# Chat Companions
 
-crie um site em branco
+Quero criar um site tipo o aplicativo Afizzy (chat com personagens de IA), focado apenas em texto, sem geração de imagens, vídeos ou áudio. Como é para uso pessoal, deve ser direto e funcional: catálogo de personagens com diferentes personalidades, tela de chat em texto com streaming e histórico, e formulário simples para criar e personalizar novos personagens (nome, avatar básico, personalidade e instruções).
 
 This project was built with [Lovable](https://lovable.dev).
 
-**Live app**: https://hystoai.lovable.app
+**Live app**: https://hysto.lovable.app
 
 ## Build with Lovable
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/560fe7aa-04de-4f48-b8a9-1608dd40bbfb).
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/bd25296a-5829-448f-b851-8a25de8d2541).
 
 - **Ship faster**: describe what you want to build and Lovable handles the code.
 - **Stay in sync**: every change made in Lovable is committed straight to this repository.
