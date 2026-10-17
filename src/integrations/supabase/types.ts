@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.18"
   }
   public: {
     Tables: {
@@ -71,7 +71,6 @@ export type Database = {
       messages: {
         Row: {
           character_id: string
-          client_message_id: string | null
           content: string
           created_at: string
           id: string
@@ -80,7 +79,6 @@ export type Database = {
         }
         Insert: {
           character_id: string
-          client_message_id?: string | null
           content: string
           created_at?: string
           id?: string
@@ -89,7 +87,6 @@ export type Database = {
         }
         Update: {
           character_id?: string
-          client_message_id?: string | null
           content?: string
           created_at?: string
           id?: string
@@ -106,14 +103,63 @@ export type Database = {
           },
         ]
       }
+      personas: {
+        Row: {
+          age: number | null
+          boundaries: string
+          created_at: string
+          description: string
+          dislikes: string
+          gender: string
+          id: string
+          is_default: boolean
+          likes: string
+          name: string
+          photo_url: string
+          role_description: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age?: number | null
+          boundaries?: string
+          created_at?: string
+          description?: string
+          dislikes?: string
+          gender?: string
+          id?: string
+          is_default?: boolean
+          likes?: string
+          name: string
+          photo_url?: string
+          role_description?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age?: number | null
+          boundaries?: string
+          created_at?: string
+          description?: string
+          dislikes?: string
+          gender?: string
+          id?: string
+          is_default?: boolean
+          likes?: string
+          name?: string
+          photo_url?: string
+          role_description?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       story_memories: {
         Row: {
           character_id: string
           known_facts: string
           last_processed_message_id: string | null
-          revision: number
           scene: string
-          source_ids: string[]
           summary: string
           updated_at: string
           user_id: string
@@ -122,20 +168,16 @@ export type Database = {
           character_id: string
           known_facts?: string
           last_processed_message_id?: string | null
-          revision?: number
           scene?: string
-          source_ids?: string[]
           summary?: string
           updated_at?: string
-          user_id?: string
+          user_id: string
         }
         Update: {
           character_id?: string
           known_facts?: string
           last_processed_message_id?: string | null
-          revision?: number
           scene?: string
-          source_ids?: string[]
           summary?: string
           updated_at?: string
           user_id?: string

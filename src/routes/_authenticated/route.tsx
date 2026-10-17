@@ -20,7 +20,7 @@ function Layout() {
   const isChat = pathname.startsWith("/chat/");
   const links = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { to: "/characters/", label: "Personagens", icon: Users },
+    { to: "/characters", label: "Personagens", icon: Users },
     { to: "/personas", label: "Persona", icon: UserRound },
     { to: "/profile", label: "Perfil", icon: CircleUserRound },
   ] as const;
@@ -46,7 +46,7 @@ function Layout() {
       </header>
       <nav aria-label="Menu principal" className={`${isChat ? "hidden sm:flex" : "flex"} shrink-0 items-center gap-1 overflow-x-auto border-b border-border px-3 py-2 sm:px-5 [scrollbar-width:none]`}>
         {links.map(({ to, label, icon: Icon }) => (
-          <Link key={to} to={to} className={`inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${pathname === to || (to === "/characters/" && pathname.startsWith("/characters/")) ? "bg-primary/10 font-semibold text-primary" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
+          <Link key={to} to={to} className={`inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${pathname === to || (to === "/characters" && pathname.startsWith("/characters")) ? "bg-primary/10 font-semibold text-primary" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
             <Icon className="size-4" />{label}
           </Link>
         ))}

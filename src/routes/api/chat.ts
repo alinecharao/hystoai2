@@ -395,7 +395,7 @@ export const Route = createFileRoute("/api/chat")({
         let storyMemory: { summary: string; scene: string; known_facts: string; last_processed_message_id?: string | null } | null = null;
         try {
           const { data, error } = await supabase
-            .from("story_memories" as never)
+            .from("story_memories")
             .select("summary, scene, known_facts, last_processed_message_id")
             .eq("user_id", userId)
             .eq("character_id", character.id)
@@ -448,20 +448,20 @@ export const Route = createFileRoute("/api/chat")({
 
         // Never trust persona text from the browser: fetch the selected persona
         // from the authenticated user's own records.
-        let selectedPersona: { name: string; description: string; gender?: string; age?: number | null; role_description?: string; likes?: string; dislikes?: string; boundaries?: string } | null = null;
+        let selectedPersona = null as { name: string; description: string; gender?: string; age?: number | null; role_description?: string; likes?: string; dislikes?: string; boundaries?: string } | null;
         if (body.personaId) {
           if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.personaId)) {
             return json(400, "Persona inválida.");
           }
           const { data: persona, error: personaError } = await supabase
-            .from("personas" as never)
+            .from("personas")
             .select("name, description, gender, age, role_description, likes, dislikes, boundaries")
             .eq("id", body.personaId)
             .eq("user_id", userId)
             .maybeSingle();
           if (personaError) return json(500, "Não foi possível carregar a persona. Verifique a migração.");
           if (!persona) return json(404, "Persona não encontrada.");
-          selectedPersona = persona as typeof selectedPersona;
+          selectedPersona = persona;
         }
 
         const promptSections = buildCharacterPromptSections(character);
@@ -791,7 +791,7 @@ export const Route = createFileRoute("/api/chat")({
             const fields = parsed as Record<string, unknown>;
             if (!["summary", "scene", "known_facts"].every((field) => typeof fields[field] === "string" && (fields[field] as string).length <= 2400)) return;
             const { error } = await supabase
-              .from("story_memories" as never)
+              .from("story_memories")
               .upsert({
                 user_id: userId,
                 character_id: character.id,

@@ -135,7 +135,7 @@ function ChatWindow({ character, stored }: { character: Character; stored: { id:
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      const { data, error } = await supabase.from("personas" as never)
+      const { data, error } = await supabase.from("personas")
         .select("id, name, description, is_default").order("created_at", { ascending: true });
       if (error) { console.warn("personas_load_failed", error.message); return; }
       if (cancelled) return;
@@ -168,8 +168,8 @@ function ChatWindow({ character, stored }: { character: Character; stored: { id:
     try {
       const payload = { name, description: personaDescription.trim(), user_id: user.id };
       const query = editingPersonaId
-        ? supabase.from("personas" as never).update(payload as never).eq("id", editingPersonaId).eq("user_id", user.id)
-        : supabase.from("personas" as never).insert(payload as never);
+        ? supabase.from("personas").update(payload as never).eq("id", editingPersonaId).eq("user_id", user.id)
+        : supabase.from("personas").insert(payload as never);
       const { data, error } = await query.select("id, name, description").single();
       if (error) throw error;
       const saved = data as Persona;
@@ -187,7 +187,7 @@ function ChatWindow({ character, stored }: { character: Character; stored: { id:
     if (!editingPersonaId || !confirm("Excluir esta persona? Suas mensagens serão preservadas.")) return;
     setPersonaSaving(true);
     try {
-      const { error } = await supabase.from("personas" as never).delete()
+      const { error } = await supabase.from("personas").delete()
         .eq("id", editingPersonaId).eq("user_id", user.id);
       if (error) throw error;
       setPersonas((current) => current.filter((p) => p.id !== editingPersonaId));

@@ -34,7 +34,7 @@ function PersonasPage() {
   const [formError, setFormError] = useState("");
 
   const reload = async () => {
-    const { data, error: loadError } = await supabase.from("personas" as never)
+    const { data, error: loadError } = await supabase.from("personas")
       .select("*").eq("user_id", user.id).order("created_at");
     setError(loadError?.message ?? "");
     if (!loadError) setItems((data ?? []) as Persona[]);
@@ -75,12 +75,12 @@ function PersonasPage() {
     const payload = { name: name.trim(), description: roleDescription.trim(), photo_url: resolvedPhotoUrl, gender: gender.trim(), age: age ? Number(age) : null, role_description: roleDescription.trim(), likes: likes.trim(), dislikes: dislikes.trim(), boundaries: boundaries.trim(), is_default: isDefault, user_id: user.id };
     if (age && (!Number.isInteger(Number(age)) || Number(age) < 1 || Number(age) > 120)) { setFormError("Informe uma idade válida."); setSaving(false); return; }
     if (isDefault) {
-      const { error: unsetError } = await supabase.from("personas" as never).update({ is_default: false } as never).eq("user_id", user.id).eq("is_default", true);
+      const { error: unsetError } = await supabase.from("personas").update({ is_default: false } as never).eq("user_id", user.id).eq("is_default", true);
       if (unsetError) { setFormError(unsetError.message); setSaving(false); return; }
     }
     const query = editing
-      ? supabase.from("personas" as never).update(payload as never).eq("id", editing).eq("user_id", user.id)
-      : supabase.from("personas" as never).insert(payload as never);
+      ? supabase.from("personas").update(payload as never).eq("id", editing).eq("user_id", user.id)
+      : supabase.from("personas").insert(payload as never);
     const { error: saveError } = await query;
     setSaving(false);
     if (saveError) {
@@ -92,7 +92,7 @@ function PersonasPage() {
   };
   const remove = async (persona: Persona) => {
     if (!confirm(`Excluir a persona "${persona.name}"? As conversas não serão apagadas.`)) return;
-    const { error: deleteError } = await supabase.from("personas" as never).delete().eq("id", persona.id).eq("user_id", user.id);
+    const { error: deleteError } = await supabase.from("personas").delete().eq("id", persona.id).eq("user_id", user.id);
     if (deleteError) { setError(deleteError.message); return; }
     await reload();
   };
