@@ -34,13 +34,17 @@ export function stripNarrativeControlTags(value: string): string {
 export type NarrativeSegment = { type: "body" | "thought"; text: string };
 
 export function parseNarrativeSegments(text: string): NarrativeSegment[] {
-  const normalized = stripNarrativeControlTags(text).replace(
-    /\[pensamento\]([\s\S]*?)(?:\[\/pensamento\]|$)/gi,
-    "<thought>$1</thought>",
-  );
+  // Only a *closed* thought block can affect styling. A missing closing
+  // marker must never turn all subsequent dialogue into a thought.
+  const normalized = stripNarrativeControlTags(text)
+    .replace(/\[pensamento\]([\s\S]*?)\[\/pensamento\]/gi, "<thought>$1</thought>")
+    .replace(/\[\/?pensamento\]/gi, "")
+    .replace(/<thought>(?![\s\S]*?<\/thought>)/gi, "")
+    .replace(/<\/thought>/gi, (tag, offset, source) =>
+      source.slice(0, offset).includes("<thought>") ? tag : "");
 
   const segments: NarrativeSegment[] = [];
-  const thoughtPattern = /<thought>([\s\S]*?)(?:<\/thought>|$)/g;
+  const thoughtPattern = /<thought>([\s\S]*?)<\/thought>/gi;
   let cursor = 0;
 
   for (const match of normalized.matchAll(thoughtPattern)) {
@@ -52,9 +56,9 @@ export function parseNarrativeSegments(text: string): NarrativeSegment[] {
     cursor = start + match[0].length;
   }
 
-  const remaining = normalized.slice(cursor).trim();
+  const remaining = normalized.slice(cursor).replace(/<\/?thought>/gi, "").trim();
   if (remaining) segments.push({ type: "body", text: remaining });
-  return segments.length ? segments : [{ type: "body", text }];
+  return segments.length ? segments : [{ type: "body", text: normalized.trim() }];
 }
 
 export const charactersQuery = queryOptions({
