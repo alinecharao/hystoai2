@@ -4,4 +4,4 @@
 - [x] Validar estrutura, RLS e preservação dos dados; testes transacionais revertidos, nenhuma linha de teste restante.
 - [x] Aplicar atualização obrigatória dos pacotes e verificar erros existentes; aplicativo sem erros de compilação.
 - [x] Recuperar personagens próprios, mensagens e memória do backup na conta criada, preservando dados existentes.
-- [ ] Conferir os dados recuperados e abrir as histórias na conta destinatária.
+- [x] Conferir os dados recuperados e abrir as histórias na conta destinatária.
