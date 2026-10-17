@@ -448,7 +448,7 @@ export const Route = createFileRoute("/api/chat")({
 
         // Never trust persona text from the browser: fetch the selected persona
         // from the authenticated user's own records.
-        let selectedPersona: { name: string; description: string; gender?: string; age?: number | null; role_description?: string; likes?: string; dislikes?: string; boundaries?: string } | null = null;
+        let selectedPersona = null as { name: string; description: string; gender?: string; age?: number | null; role_description?: string; likes?: string; dislikes?: string; boundaries?: string } | null;
         if (body.personaId) {
           if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.personaId)) {
             return json(400, "Persona inválida.");
@@ -461,7 +461,7 @@ export const Route = createFileRoute("/api/chat")({
             .maybeSingle();
           if (personaError) return json(500, "Não foi possível carregar a persona. Verifique a migração.");
           if (!persona) return json(404, "Persona não encontrada.");
-          selectedPersona = persona as typeof selectedPersona;
+          selectedPersona = persona;
         }
 
         const promptSections = buildCharacterPromptSections(character);
