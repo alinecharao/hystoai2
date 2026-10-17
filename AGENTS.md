@@ -15,3 +15,4 @@
 - Signed-in pages live under `src/routes/_authenticated/` (client-only gate redirecting to `/auth`).
 - `/` redirects to `/auth`; successful authentication opens `/dashboard`, the canonical catalog of all stories.
 - Evolve `story_memories` additively and keep its `(user_id, character_id)` primary key and legacy fields; the existing automatic memory upsert relies on that conflict target and old data must remain compatible.
+- Preserve imported message correlation IDs and story-memory source IDs/revisions as additive metadata so backup recovery does not discard provenance or break legacy reads.

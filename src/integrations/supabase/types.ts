@@ -71,6 +71,7 @@ export type Database = {
       messages: {
         Row: {
           character_id: string
+          client_message_id: string | null
           content: string
           created_at: string
           id: string
@@ -79,6 +80,7 @@ export type Database = {
         }
         Insert: {
           character_id: string
+          client_message_id?: string | null
           content: string
           created_at?: string
           id?: string
@@ -87,6 +89,7 @@ export type Database = {
         }
         Update: {
           character_id?: string
+          client_message_id?: string | null
           content?: string
           created_at?: string
           id?: string
@@ -159,7 +162,9 @@ export type Database = {
           character_id: string
           known_facts: string
           last_processed_message_id: string | null
+          revision: number
           scene: string
+          source_ids: string[]
           summary: string
           updated_at: string
           user_id: string
@@ -168,7 +173,9 @@ export type Database = {
           character_id: string
           known_facts?: string
           last_processed_message_id?: string | null
+          revision?: number
           scene?: string
+          source_ids?: string[]
           summary?: string
           updated_at?: string
           user_id: string
@@ -177,7 +184,9 @@ export type Database = {
           character_id?: string
           known_facts?: string
           last_processed_message_id?: string | null
+          revision?: number
           scene?: string
+          source_ids?: string[]
           summary?: string
           updated_at?: string
           user_id?: string
