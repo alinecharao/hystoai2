@@ -14,7 +14,184 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      characters: {
+        Row: {
+          avatar: string
+          background: string
+          created_at: string
+          description: string
+          gender: string
+          greeting: string
+          id: string
+          image_url: string
+          instructions: string
+          name: string
+          opening_scene: string
+          personality: string
+          tagline: string
+          tags: string[]
+          user_id: string | null
+        }
+        Insert: {
+          avatar?: string
+          background?: string
+          created_at?: string
+          description?: string
+          gender?: string
+          greeting?: string
+          id?: string
+          image_url?: string
+          instructions?: string
+          name: string
+          opening_scene?: string
+          personality?: string
+          tagline?: string
+          tags?: string[]
+          user_id?: string | null
+        }
+        Update: {
+          avatar?: string
+          background?: string
+          created_at?: string
+          description?: string
+          gender?: string
+          greeting?: string
+          id?: string
+          image_url?: string
+          instructions?: string
+          name?: string
+          opening_scene?: string
+          personality?: string
+          tagline?: string
+          tags?: string[]
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          character_id: string
+          content: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          character_id: string
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id?: string
+        }
+        Update: {
+          character_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personas: {
+        Row: {
+          age: number | null
+          boundaries: string
+          created_at: string
+          description: string
+          dislikes: string
+          gender: string
+          id: string
+          is_default: boolean
+          likes: string
+          name: string
+          photo_url: string
+          role_description: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age?: number | null
+          boundaries?: string
+          created_at?: string
+          description?: string
+          dislikes?: string
+          gender?: string
+          id?: string
+          is_default?: boolean
+          likes?: string
+          name: string
+          photo_url?: string
+          role_description?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age?: number | null
+          boundaries?: string
+          created_at?: string
+          description?: string
+          dislikes?: string
+          gender?: string
+          id?: string
+          is_default?: boolean
+          likes?: string
+          name?: string
+          photo_url?: string
+          role_description?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      story_memories: {
+        Row: {
+          character_id: string
+          known_facts: string
+          last_processed_message_id: string | null
+          scene: string
+          summary: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          character_id: string
+          known_facts?: string
+          last_processed_message_id?: string | null
+          scene?: string
+          summary?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          character_id?: string
+          known_facts?: string
+          last_processed_message_id?: string | null
+          scene?: string
+          summary?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_memories_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
