@@ -253,7 +253,7 @@ function ChatWindow({ character, stored }: { character: Character; stored: { id:
 
   // useChat only consumes initial messages on mount. Refresh its local state
   // when the persisted history changes, but never during an active generation.
-  const storedVersion = stored.map((message) => message.id).join("|");
+  const storedVersion = stored.map((message) => message.id + ":" + message.content).join("|");
   const syncedStoredVersion = useRef(storedVersion);
   useEffect(() => {
     if (status === "submitted" || status === "streaming") return;
@@ -397,12 +397,30 @@ function ChatWindow({ character, stored }: { character: Character; stored: { id:
 
 
   function persistedMessageId(message: UIMessage): string | null {
-    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    const text = messageText(message).trim();
-    const candidates = stored.filter((item) => item.role === message.role && item.content.trim() === text);
-    if (uuid.test(message.id) && candidates.some((item) => item.id === message.id)) return message.id;
-    // Temporary UI ids are not database ids. Avoid deleting an arbitrary
-    // duplicate when the same text occurs more than once.
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const savedById = stored.find((item) => item.id === message.id);
+    if (uuid.test(message.id) && savedById) return message.id;
+
+    // Prefer chronological alignment over text matching: repeated replies
+    // may have identical content but distinct database UUIDs.
+    const localIndex = messages.findIndex((item) => item === message || item.id === message.id);
+    if (localIndex >= 0) {
+      const allLocalMatch = messages.length === stored.length &&
+        messages.every((item, index) =>
+          item.role === stored[index]?.role &&
+          messageText(item).trim() === stored[index]?.content.trim());
+      if (allLocalMatch) return stored[localIndex]?.id ?? null;
+
+      // A newly generated reply can have a temporary id. Only align by
+      // occurrence when both histories contain exactly the same instances.
+      const localMatches = messages.filter((item) => item.role === message.role && messageText(item).trim() === messageText(message).trim());
+      const savedMatches = stored.filter((item) => item.role === message.role && item.content.trim() === messageText(message).trim());
+      if (localMatches.length === savedMatches.length) {
+        const occurrence = localMatches.findIndex((item) => item === message || item.id === message.id);
+        if (occurrence >= 0) return savedMatches[occurrence]?.id ?? null;
+      }
+    }
+    const candidates = stored.filter((item) => item.role === message.role && item.content.trim() === messageText(message).trim());
     return candidates.length === 1 ? candidates[0]!.id : null;
   }
 
