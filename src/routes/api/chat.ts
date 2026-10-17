@@ -395,7 +395,7 @@ export const Route = createFileRoute("/api/chat")({
         let storyMemory: { summary: string; scene: string; known_facts: string; last_processed_message_id?: string | null } | null = null;
         try {
           const { data, error } = await supabase
-            .from("story_memories" as never)
+            .from("story_memories")
             .select("summary, scene, known_facts, last_processed_message_id")
             .eq("user_id", userId)
             .eq("character_id", character.id)
@@ -454,7 +454,7 @@ export const Route = createFileRoute("/api/chat")({
             return json(400, "Persona inválida.");
           }
           const { data: persona, error: personaError } = await supabase
-            .from("personas" as never)
+            .from("personas")
             .select("name, description, gender, age, role_description, likes, dislikes, boundaries")
             .eq("id", body.personaId)
             .eq("user_id", userId)
@@ -791,7 +791,7 @@ export const Route = createFileRoute("/api/chat")({
             const fields = parsed as Record<string, unknown>;
             if (!["summary", "scene", "known_facts"].every((field) => typeof fields[field] === "string" && (fields[field] as string).length <= 2400)) return;
             const { error } = await supabase
-              .from("story_memories" as never)
+              .from("story_memories")
               .upsert({
                 user_id: userId,
                 character_id: character.id,
