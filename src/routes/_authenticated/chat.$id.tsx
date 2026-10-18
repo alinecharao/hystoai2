@@ -454,12 +454,20 @@ function ChatWindow({ character, stored }: { character: Character; stored: { id:
     if (!userText) return;
     const databaseId = persistedMessageId(message);
     if (!databaseId) { alert("Atualize a conversa antes de gerar novamente esta resposta."); return; }
+    if (sendingLock.current) return;
+    sendingLock.current = true;
     regenerateIdRef.current = databaseId;
     setErrorHidden(true);
+    // useChat appends a user message and an assistant response on sendMessage.
+    // Remove only the local pair first so regeneration does not display duplicates.
+    // The database records remain untouched until a successful replacement.
+    setMessages(messages.slice(0, previousUserIndex));
     try {
       await sendMessage({ text: userText });
     } catch (retryError) {
       regenerateIdRef.current = null;
+      sendingLock.current = false;
+      setMessages(messages);
       alert(retryError instanceof Error ? retryError.message : "Não foi possível gerar uma nova resposta.");
     }
   }
