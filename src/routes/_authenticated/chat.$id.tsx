@@ -361,16 +361,40 @@ function ChatWindow({ character, stored }: { character: Character; stored: { id:
   }
 
   async function deleteFailedMessage() {
-    // Dismiss the error only. Never delete a saved message implicitly.
-    setErrorHidden(true);
-    await qc.invalidateQueries({ queryKey: ["messages", character.id] });
+    const message = lastUserMessage();
+    if (!message) {
+      setErrorHidden(true);
+      return;
+    }
+
+    try {
+      const text = messageText(message);
+      await removeLatestPersistedUserMessage(text);
+      removeLastLocalUserMessage();
+      setErrorHidden(true);
+      await qc.invalidateQueries({ queryKey: ["messages", character.id] });
+    } catch (deleteError) {
+      alert(deleteError instanceof Error ? deleteError.message : "Não foi possível apagar a mensagem.");
+    }
   }
 
   async function retryFailedMessage() {
-    // A retry must not delete a user's saved message or silently resend it.
-    alert("A tentativa automática está temporariamente desativada para proteger suas mensagens. Atualize a conversa para conferir o histórico.");
-    await qc.invalidateQueries({ queryKey: ["messages", character.id] });
+    const message = lastUserMessage();
+    if (!message || busy) return;
+
+    const text = messageText(message).trim();
+    if (!text) return;
+
+    try {
+      await removeLatestPersistedUserMessage(text);
+      removeLastLocalUserMessage();
+      setErrorHidden(true);
+      await sendMessage({ text });
+    } catch (retryError) {
+      alert(retryError instanceof Error ? retryError.message : "Não foi possível reenviar a mensagem.");
+    }
   }
+
 
   function persistedMessageId(message: UIMessage): string | null {
     // Never guess an id from text or occurrence: duplicate messages and
@@ -399,11 +423,32 @@ function ChatWindow({ character, stored }: { character: Character; stored: { id:
     }
   }
 
-  async function regenerateAssistantMessage(_message: UIMessage, _index: number) {
-    // Temporarily disabled: useChat appends a new user/assistant pair, while
-    // the server replaces an existing assistant row. Mixing the two paths
-    // can duplicate visible messages or desynchronize the chat.
-    alert("Gerar novamente está temporariamente desativado para proteger o histórico. Nenhuma mensagem foi alterada.");
+  async function regenerateAssistantMessage(message: UIMessage, index: number) {
+    if (busy || message.role !== "assistant") return;
+    if (index !== messages.length - 1) {
+      alert("Por enquanto, só é possível gerar novamente a resposta mais recente.");
+      return;
+    }
+    let previousUserIndex = index - 1;
+    while (previousUserIndex >= 0 && messages[previousUserIndex]?.role !== "user") previousUserIndex--;
+    const previousUser = previousUserIndex >= 0 ? messages[previousUserIndex] : null;
+    if (!previousUser) return;
+    const userText = messageText(previousUser).trim();
+    if (!userText) return;
+    const databaseId = persistedMessageId(message);
+    if (!databaseId) { alert("Atualize a conversa antes de gerar novamente esta resposta."); return; }
+    if (sendingLock.current) return;
+    sendingLock.current = true;
+    regenerateIdRef.current = databaseId;
+    setErrorHidden(true);
+    try {
+      await sendMessage({ text: userText });
+    } catch (retryError) {
+      regenerateIdRef.current = null;
+      sendingLock.current = false;
+      await qc.invalidateQueries({ queryKey: ["messages", character.id] });
+      alert(retryError instanceof Error ? retryError.message : "Não foi possível gerar uma nova resposta.");
+    }
   }
 
   async function generateFromExistingUser(_message: UIMessage) {
