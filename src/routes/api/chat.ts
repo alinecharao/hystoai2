@@ -262,7 +262,7 @@ export const Route = createFileRoute("/api/chat")({
         if (authErr || !claims?.claims?.sub) return json(401, "Sessão inválida.");
         const userId = claims.claims.sub;
 
-        const body = (await request.json()) as {
+        const body = (await request.json().catch(() => null)) as null | {
           characterId?: string;
           role?: "user" | "assistant";
           all?: boolean;
@@ -346,7 +346,7 @@ export const Route = createFileRoute("/api/chat")({
         if (authErr || !claims?.claims?.sub) return json(401, "Sessão inválida.");
         const userId = claims.claims.sub;
 
-        const body = (await request.json()) as {
+        const body = (await request.json().catch(() => null)) as null | {
           characterId?: string;
           text?: string;
           thoughts?: boolean;
@@ -354,6 +354,7 @@ export const Route = createFileRoute("/api/chat")({
           personaId?: string | null;
           regenerateMessageId?: string;
         };
+        if (!body) return json(400, "Requisição interrompida.");
         const text = body.text?.trim();
         if (!body.characterId || !text) return json(400, "Mensagem vazia.");
 
