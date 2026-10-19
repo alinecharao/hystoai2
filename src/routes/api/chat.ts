@@ -269,6 +269,7 @@ export const Route = createFileRoute("/api/chat")({
           messageId?: string;
         };
 
+        if (!body) return json(400, "Requisição interrompida.");
         if (!body.characterId) return json(400, "Personagem não informado.");
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
