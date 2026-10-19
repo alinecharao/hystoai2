@@ -397,31 +397,14 @@ function ChatWindow({ character, stored }: { character: Character; stored: { id:
 
 
   function persistedMessageId(message: UIMessage): string | null {
-    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    const savedById = stored.find((item) => item.id === message.id);
-    if (uuid.test(message.id) && savedById) return message.id;
-
-    // Prefer chronological alignment over text matching: repeated replies
-    // may have identical content but distinct database UUIDs.
-    const localIndex = messages.findIndex((item) => item === message || item.id === message.id);
-    if (localIndex >= 0) {
-      const allLocalMatch = messages.length === stored.length &&
-        messages.every((item, index) =>
-          item.role === stored[index]?.role &&
-          messageText(item).trim() === stored[index]?.content.trim());
-      if (allLocalMatch) return stored[localIndex]?.id ?? null;
-
-      // A newly generated reply can have a temporary id. Only align by
-      // occurrence when both histories contain exactly the same instances.
-      const localMatches = messages.filter((item) => item.role === message.role && messageText(item).trim() === messageText(message).trim());
-      const savedMatches = stored.filter((item) => item.role === message.role && item.content.trim() === messageText(message).trim());
-      if (localMatches.length === savedMatches.length) {
-        const occurrence = localMatches.findIndex((item) => item === message || item.id === message.id);
-        if (occurrence >= 0) return savedMatches[occurrence]?.id ?? null;
-      }
-    }
-    const candidates = stored.filter((item) => item.role === message.role && item.content.trim() === messageText(message).trim());
-    return candidates.length === 1 ? candidates[0]!.id : null;
+    // Never guess an id from text or occurrence: duplicate messages and
+    // partially synchronized chat windows make those guesses destructive.
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuid.test(message.id)) return null;
+    const saved = stored.find((item) => item.id === message.id);
+    return saved && saved.role === message.role && saved.content.trim() === messageText(message).trim()
+      ? saved.id
+      : null;
   }
 
   async function deleteIndividualMessage(message: UIMessage) {
@@ -458,34 +441,21 @@ function ChatWindow({ character, stored }: { character: Character; stored: { id:
     sendingLock.current = true;
     regenerateIdRef.current = databaseId;
     setErrorHidden(true);
-    // useChat appends a user message and an assistant response on sendMessage.
-    // Remove only the local pair first so regeneration does not display duplicates.
-    // The database records remain untouched until a successful replacement.
-    setMessages(messages.slice(0, previousUserIndex));
     try {
       await sendMessage({ text: userText });
     } catch (retryError) {
       regenerateIdRef.current = null;
       sendingLock.current = false;
-      setMessages(messages);
+      await qc.invalidateQueries({ queryKey: ["messages", character.id] });
       alert(retryError instanceof Error ? retryError.message : "Não foi possível gerar uma nova resposta.");
     }
   }
 
-  async function generateFromExistingUser(message: UIMessage) {
-    if (busy || message.role !== "user") return;
-
-    const text = messageText(message).trim();
-    if (!text) return;
-
-    try {
-      await removeLatestPersistedUserMessage(text);
-      setMessages(messages.filter((item) => item.id !== message.id));
-      setErrorHidden(true);
-      await sendMessage({ text });
-    } catch (retryError) {
-      alert(retryError instanceof Error ? retryError.message : "Não foi possível gerar a resposta.");
-    }
+  async function generateFromExistingUser(_message: UIMessage) {
+    // Never delete a persisted user message as a side effect of retrying.
+    // The old retry implementation deleted the latest user row regardless
+    // of which message the user selected.
+    alert("A nova tentativa desta mensagem está temporariamente indisponível para proteger seu histórico. Nenhuma mensagem foi apagada.");
   }
 
   return (
