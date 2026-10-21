@@ -638,6 +638,19 @@ export const Route = createFileRoute("/api/chat")({
 
               let requestBody: Record<string, unknown> = { ...originalBody, model };
 
+              if (provider.id === "gemini") {
+                // Google's OpenAI-compatible endpoint is still beta: send only
+                // fields used by this text-chat route that it explicitly supports.
+                requestBody = {
+                  model,
+                  messages: originalBody["messages"],
+                  stream: originalBody["stream"] === true,
+                  ...(typeof originalBody["max_tokens"] === "number"
+                    ? { max_tokens: originalBody["max_tokens"] }
+                    : {}),
+                };
+              }
+
               // Groq's free/on-demand TPM is relatively small. Keep the
               // permanent system prompt, but trim conversational history only
               // for Groq so larger story messages still fit without weakening
@@ -742,11 +755,16 @@ export const Route = createFileRoute("/api/chat")({
               }
 
               if (provider.id === "gemini" && response.status === 400) {
-                // Keep full provider diagnostics in server logs, not in the chat.
+                // A non-safety 400 can be model-specific. Try the remaining
+                // Gemini models; keep the provider's diagnostic on the server.
                 console.warn("hysto_gemini_bad_request", {
                   model,
                   detail: providerErrorText.slice(0, 900),
                 });
+                lastResponse = new Response(JSON.stringify({
+                  error: "O Gemini rejeitou a solicitação (400). Confira o detalhe no log hysto_gemini_bad_request e a configuração do modelo.",
+                }), { status: 400, headers: { "Content-Type": "application/json" } });
+                continue;
               }
 
               lastResponse = response;
