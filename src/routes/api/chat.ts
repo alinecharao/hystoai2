@@ -736,7 +736,15 @@ export const Route = createFileRoute("/api/chat")({
                 }
               }
 
-              if (!RETRYABLE_PROVIDER_STATUS.has(response.status)) {
+              // A 400 can mean a model was renamed or an optional request
+              // parameter is unsupported. Try another model for those errors,
+              // but never bypass a provider's content/safety refusal.
+              const incompatibleRequest =
+                response.status === 400 &&
+                /model (?:not found|does not exist|is not available|not supported|unavailable)|invalid[_ -]?model|unsupported (?:parameter|value|model)|unknown parameter|unrecognized (?:parameter|request argument)|invalid (?:parameter|request argument)|invalid_request_error/i.test(providerErrorText) &&
+                !moderationFlag;
+
+              if (!RETRYABLE_PROVIDER_STATUS.has(response.status) && !incompatibleRequest) {
                 return response;
               }
 
