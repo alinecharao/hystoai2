@@ -676,6 +676,29 @@ export const Route = createFileRoute("/api/chat")({
                 delete requestBody["max_tokens"];
               }
 
+              // Groq's 8k TPM tier counts the large permanent prompt and
+              // output allowance together. Reduce only the request sent to Groq;
+              // the persisted history and other providers remain unchanged.
+              if (provider.id === "groq" && Array.isArray(requestBody["messages"])) {
+                const items = requestBody["messages"] as Record<string, unknown>[];
+                const systemMessage = items.find((item) => item["role"] === "system");
+                const recentMessages = items.filter((item) => item["role"] !== "system").slice(-4);
+                const compactSystem = systemMessage && typeof systemMessage["content"] === "string"
+                  ? [{ ...systemMessage, content: systemMessage["content"].slice(0, 10500) }]
+                  : [];
+                const remainingChars = 4500;
+                let usedChars = 0;
+                const compactRecent = recentMessages.reverse().map((item) => {
+                  const content = typeof item["content"] === "string" ? item["content"] : "";
+                  const allowance = Math.max(0, remainingChars - usedChars);
+                  const shortened = content.slice(-allowance);
+                  usedChars += shortened.length;
+                  return { ...item, content: shortened };
+                }).reverse().filter((item) => item["content"]);
+                requestBody["messages"] = [...compactSystem, ...compactRecent];
+                requestBody["max_completion_tokens"] = 900;
+              }
+
               const attemptController = new AbortController();
               const timeout = setTimeout(() => attemptController.abort(), 14000);
               const upstreamAbort = () => attemptController.abort();
@@ -716,6 +739,14 @@ export const Route = createFileRoute("/api/chat")({
                 return new Response(JSON.stringify({
                   error: "O provedor de IA sinalizou um possível problema de segurança no contexto da conversa. Nenhuma resposta foi gerada. Você pode revisar a cena ou tentar novamente mais tarde.",
                 }), { status: 400, headers: { "Content-Type": "application/json" } });
+              }
+
+              if (provider.id === "gemini" && response.status === 400) {
+                // Keep full provider diagnostics in server logs, not in the chat.
+                console.warn("hysto_gemini_bad_request", {
+                  model,
+                  detail: providerErrorText.slice(0, 900),
+                });
               }
 
               lastResponse = response;
