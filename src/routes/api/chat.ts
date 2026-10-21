@@ -761,8 +761,25 @@ export const Route = createFileRoute("/api/chat")({
                   model,
                   detail: providerErrorText.slice(0, 900),
                 });
+                // Return a concise, sanitized provider reason so the user can
+                // identify a bad model, unsupported field or context limit
+                // without requiring access to deployment logs.
+                let diagnostic = "Motivo não informado pela API.";
+                try {
+                  const parsed = JSON.parse(providerErrorText) as {
+                    error?: { message?: unknown; status?: unknown };
+                  };
+                  const message = parsed.error?.message;
+                  if (typeof message === "string" && message.trim()) {
+                    diagnostic = message
+                      .replace(/(?:AIza[0-9A-Za-z_-]{20,}|sk-[0-9A-Za-z_-]{15,})/g, "[credencial omitida]")
+                      .slice(0, 500);
+                  }
+                } catch {
+                  diagnostic = "Resposta de erro não estruturada; consulte os logs.";
+                }
                 lastResponse = new Response(JSON.stringify({
-                  error: "O Gemini rejeitou a solicitação (400). Confira o detalhe no log hysto_gemini_bad_request e a configuração do modelo.",
+                  error: `Gemini (${model}): ${diagnostic}`,
                 }), { status: 400, headers: { "Content-Type": "application/json" } });
                 continue;
               }
