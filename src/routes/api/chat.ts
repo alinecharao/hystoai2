@@ -691,7 +691,7 @@ export const Route = createFileRoute("/api/chat")({
                 const compactRecent = recentMessages.reverse().map((item) => {
                   const content = typeof item["content"] === "string" ? item["content"] : "";
                   const allowance = Math.max(0, remainingChars - usedChars);
-                  const shortened = content.slice(-allowance);
+                  const shortened = allowance > 0 ? content.slice(-allowance) : "";
                   usedChars += shortened.length;
                   return { ...item, content: shortened };
                 }).reverse().filter((item) => item["content"]);
